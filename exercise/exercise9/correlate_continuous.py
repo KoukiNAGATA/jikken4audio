@@ -1,10 +1,3 @@
-#
-# 計算機科学実験及演習 4「音響信号処理」
-# サンプルソースコード
-#
-# 音声ファイルを読み込み，フーリエ変換を行う．
-#
-
 # ライブラリの読み込み
 import matplotlib.pyplot as plt
 import numpy as np

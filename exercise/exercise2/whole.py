@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/aiueo_continuous.wav', sr=SR)
+x, _ = librosa.load('waves/continuous/aiueo.wav', sr=SR)
 
 # フーリエ変換
 fft_spec = np.fft.fft(x)

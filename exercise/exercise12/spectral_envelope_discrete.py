@@ -6,32 +6,31 @@ import librosa
 # サンプリングレート
 SR = 16000
 
-# フレームサイズ
-size_frame = 512			# 2のべき乗
-
-# フレームサイズに合わせてブラックマン窓を作成
-window = np.blackman(size_frame)
-
-# シフトサイズ
-size_shift = 16000 / 1000	# 0.001 秒 (10 msec)
-
 # スペクトルを受け取り，ケプストラムを返す関数
 def cepstrum(amplitude_spectrum):
-	log_spectrum = np.log(amplitude_spectrum)
-	cepstrum = np.fft.fft(log_spectrum)
-	return cepstrum
+	# ブラックマン窓を作成
+	window = np.blackman(len(amplitude_spectrum))
+	# 窓掛けしたデータをFFT
+	cepstrum = np.fft.rfft(amplitude_spectrum * window)
+	# 13次までのケプストラム係数を抽出
+	coefficients = cepstrum[:13]
+	# 0埋め
+	cepstrum = np.append(coefficients, [0] * (len(cepstrum) - len(coefficients)))
+	# 取り出した成分を逆フーリエ変換する
+	spectral_envelope = np.fft.irfft(cepstrum)
+	return spectral_envelope
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/aiueo_continuous.wav', sr=SR)
+x, _ = librosa.load('waves/discrete/aiueo.wav', sr=SR)
 
 # フーリエ変換
-fft_spec = np.fft.fft(x)
+fft_spec = np.fft.rfft(x)
 
 # 複素スペクトログラムを対数振幅スペクトログラムに(元の対数振幅スペクトル)
 fft_log_abs_spec = np.log(np.abs(fft_spec))
 
 # スペクトルを受け取り，ケプストラムを得る
-x_cepstrum = cepstrum(x)
+x_cepstrum = cepstrum(fft_log_abs_spec)
 
 # スペクトルを画像に表示
 
@@ -47,3 +46,6 @@ plt.plot(x_cepstrum)
 
 # 表示
 plt.show()
+
+# 保存
+fig.savefig('images/exercise12/spectral-envelope-discrete.png')

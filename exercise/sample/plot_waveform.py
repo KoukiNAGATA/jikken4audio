@@ -13,8 +13,8 @@ import librosa
 SR = 16000
 
 # 音声ファイルの読み込み
-# x, _ = librosa.load('waves/aiueo_continuous.wav', sr=SR) # 連続
-x, _ = librosa.load('waves/aiueo_discrete.wav', sr=SR) # 離散
+# x, _ = librosa.load('waves/continuous/aiueo.wav', sr=SR) # 連続
+x, _ = librosa.load('waves/discrete/aiueo.wav', sr=SR) # 離散
 
 # xに波形データが保存される
 # 第二戻り値はサンプリングレート（ここでは必要ないので _ としている）

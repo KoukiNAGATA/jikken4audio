@@ -16,9 +16,6 @@ SR = 16000
 # フレームサイズ
 size_frame = 512			# 2のべき乗
 
-# フレームサイズに合わせてブラックマン窓を作成
-window = np.blackman(size_frame)
-
 # シフトサイズ
 size_shift = 16000 / 1000	# 0.001 秒 (10 msec)
 
@@ -35,7 +32,7 @@ def is_peak(a, index):
 		return a[index] > a[index-1] and a[index] > a[index+1]
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/aiueo_continuous.wav', sr=SR)
+x, _ = librosa.load('waves/continuous/aiueo.wav', sr=SR)
 
 # size_shift分ずらしながらsize_frame分のデータを取得
 # np.arange関数はfor文で辿りたい数値のリストを返す

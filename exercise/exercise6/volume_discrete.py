@@ -22,7 +22,7 @@ def cal_rms(amp):
 
 if __name__ == '__main__':
     # 音声ファイルの読み込み
-    x, _ = librosa.load('waves/aiueo_discrete.wav', sr=SR)
+    x, _ = librosa.load('waves/discrete/aiueo.wav', sr=SR)
 
     # size_shift分ずらしながらsize_frame分のデータを取得
     # np.arange関数はfor文で辿りたい数値のリストを返す

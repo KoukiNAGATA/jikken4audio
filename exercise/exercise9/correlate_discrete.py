@@ -23,13 +23,10 @@ def is_peak(a, index):
 SR = 16000
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/aiueo_discrete.wav', sr=SR)
+x, _ = librosa.load('waves/discrete/aiueo.wav', sr=SR)
 
 # フレームサイズ
 size_frame = 512			# 2のべき乗
-
-# フレームサイズに合わせてブラックマン窓を作成
-window = np.blackman(size_frame)
 
 # シフトサイズ
 size_shift = 16000 / 1000	# 0.001 秒 (10 msec)

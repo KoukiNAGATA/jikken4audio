@@ -42,18 +42,6 @@ def calc_likelihood(x, mu, sigma):
 		results += -(np.log(np.sqrt(sigma[i]) + eps) + (x[i] - mu[i])**2/(2*sigma[i] + eps))
 	return results
 
-# 音声波形データを受け取り，ゼロ交差数を計算する関数
-def calc_zero_cross(waveform):
-	zc = 0
-	for i in range(len(waveform) - 1):
-		if(
-			(waveform[i] > 0.0 and waveform[i+1] < 0.0) or
-			(waveform[i] < 0.0 and waveform[i+1] > 0.0)
-		):
-			zc += 1
-	# 単位時間あたりに変換
-	return zc * SR / size_frame
-
 #####################################################################
 
 if __name__ == "__main__":
@@ -66,9 +54,6 @@ if __name__ == "__main__":
 
 	# スペクトログラムを保存するlist
 	spectrogram = []
-
-	# ゼロ交差数の格納場所
-	zero_count = []
 
 	# 音声ファイルの読み込み
 	y, _ = librosa.load("waves/continuous/aiueo.wav", sr=SR)
@@ -118,8 +103,6 @@ if __name__ == "__main__":
 		likelihood_list = [likelihood_a, likelihood_i, likelihood_u, likelihood_e, likelihood_o]
 		# 最大値のインデックスを取得(あ=0, い=1, う=2, え=3, お=4)
 		predicted.append(likelihood_list.index(max(likelihood_list)))
-		# ゼロ交差数の計算
-		zero_count.append(calc_zero_cross(y_frame))
 
 	# 1から始まるようにインデックス修正(あ=1, い=2, う=3, え=4, お=5)
 	predicted = np.array(predicted) + 1

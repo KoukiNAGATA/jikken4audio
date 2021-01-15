@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # フレームサイズ
-size_frame = 512			# 2のべき乗
+size_frame = 512
 
 # フレームサイズに合わせてブラックマン窓を作成
 window = np.blackman(size_frame)
@@ -50,7 +50,6 @@ def is_peak(a, index):
 # 音声ファイルの読み込み
 x, _ = librosa.load('waves/exercise14/voice.wav', sr=SR)
 
-
 # 
 # 短時間フレームにおける処理
 # 
@@ -77,36 +76,26 @@ for i in np.arange(0, len(x)-size_frame, size_shift):
 	# 不要な前半を捨てる
 	autocorr = autocorr[len(autocorr)//2 : ]
 
-	if zero_cross(x_frame) < 100 or zero_cross(x_frame) > 500 :		# 無声音または無音区間
-		# リストに追加
-		frequency.append(0)
+	# ピークのインデックスを抽出する
+	peakindices = [i for i in range (len(autocorr)) if is_peak(autocorr, i)]
 
-	else:
-		# ピークのインデックスを抽出する
-		peakindices = [i for i in range (len(autocorr)) if is_peak(autocorr, i)]
+	# インデックス0 がピークに含まれていれば捨てる
+	peakindices = [i for i in peakindices if i != 0]
 
-		# インデックス0 がピークに含まれていれば捨てる
-		peakindices = [i for i in peakindices if i != 0]
+	# 自己相関が最大となるインデックスを得る(単位:インデックス)
+	max_peak_index = max(peakindices, key=lambda index: autocorr[index])
 
-		# 自己相関が最大となるインデックスを得る(単位:インデックス)
-		max_peak_index = max(peakindices, key=lambda index: autocorr[index])
+	# インデックスに対応する周波数を得る(単位:1/秒)
+	frequency_frame = 1/(max_peak_index/SR)
 
-		# インデックスに対応する周波数を得る(単位:1/秒)
-		frequency_frame = 1/(max_peak_index/SR)
-
-		# リストに追加
-		frequency.append(frequency_frame)
+	# リストに追加
+	frequency.append(frequency_frame)
 
 	#
 	# スペクトログラムをプロット
 	#
 
-	# 該当フレームのデータを取得
-	idx = int(i)	# arangeのインデクスはfloatなのでintに変換
-	x_frame = x[idx : idx+size_frame]
-
 	# 窓掛けしたデータをFFT
-	# np.fft.rfftを使用するとFFTの前半部分のみが得られる
 	fft_spec = np.fft.rfft(x_frame * window)
 
 	# 複素スペクトログラムを対数振幅スペクトログラムに
@@ -114,6 +103,18 @@ for i in np.arange(0, len(x)-size_frame, size_shift):
 
 	# 計算した対数振幅スペクトログラムを配列に保存
 	spectrogram.append(fft_log_abs_spec)
+
+# 閾値を設定。ゼロ交差数が0の場合基本周波数を0とする。左右1フレームも0にした。
+for i in range(len(zero_count)):
+	if zero_count[i] < 200 or zero_count[i] > 1000:
+		if i == 0:
+			frequency[i+1] = 0
+		elif i == len(zero_count) - 1:
+			frequency[i-1] = 0
+		else :
+			frequency[i+1] = 0
+			frequency[i-1] = 0
+		frequency[i] = 0
 
 #
 # 画像に表示・保存
@@ -132,9 +133,7 @@ plt.imshow(
 	interpolation='nearest'
 )
 
-plt.plot(frequency, color="r", label="fundamental frequency")			# 基本周波数を描画
-plt.plot(zero_count, color="w", label="zero cross")			# ゼロ交差数を描画
-plt.legend(loc='lower right')
+plt.plot(frequency)
 plt.ylim([0, 1000])    # 縦軸を拡大する。
 plt.show()
 

@@ -74,14 +74,14 @@ if __name__ == "__main__":
 	y, _ = librosa.load("waves/continuous/aiueo.wav", sr=SR)
 
 	# パラメータの読み込み
-	mu_list = np.load('parameter/exercise15/mu.npz')
+	mu_list = np.load('exercise/exercise15/mu.npz')
 	mu_a = mu_list['arr_0']
 	mu_i = mu_list['arr_1']
 	mu_u = mu_list['arr_2']
 	mu_e = mu_list['arr_3']
 	mu_o = mu_list['arr_4']
 
-	sigma_list = np.load('parameter/exercise15/sigma.npz')
+	sigma_list = np.load('exercise/exercise15/sigma.npz')
 	sigma_a = sigma_list['arr_0']
 	sigma_i = sigma_list['arr_1']
 	sigma_u = sigma_list['arr_2']
@@ -150,4 +150,4 @@ if __name__ == "__main__":
 	plt.show()
 
 	# 保存
-	fig.savefig('images/exercise15/predicted.png')
+	fig.savefig('exercise/exercise15/predicted.png')

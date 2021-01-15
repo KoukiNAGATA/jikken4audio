@@ -48,7 +48,7 @@ def is_peak(a, index):
 		return a[index] > a[index-1] and a[index] > a[index+1]
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/exercise14/voice.wav', sr=SR)
+x, _ = librosa.load('exercise/exercise14/voice.wav', sr=SR)
 
 # 
 # 短時間フレームにおける処理
@@ -138,4 +138,4 @@ plt.ylim([0, 1000])    # 縦軸を拡大する。
 plt.show()
 
 # 保存
-fig.savefig('images/exercise14/voice.png')
+fig.savefig('exercise/exercise14/voice.png')

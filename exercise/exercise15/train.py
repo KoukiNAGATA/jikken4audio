@@ -91,5 +91,5 @@ if __name__ == "__main__":
 	sigma_o = np.mean((np.array(ceps_o) - mu_o[None,:])**2, axis=0)
 
 	# パラメータの保存
-	np.savez('parameter/exercise15/mu.npz', mu_a, mu_i, mu_u, mu_e, mu_o)
-	np.savez('parameter/exercise15/sigma.npz', sigma_a, sigma_i, sigma_u, sigma_e, sigma_o)
+	np.savez('exercise/exercise15/mu.npz', mu_a, mu_i, mu_u, mu_e, mu_o)
+	np.savez('exercise/exercise15/sigma.npz', sigma_a, sigma_i, sigma_u, sigma_e, sigma_o)

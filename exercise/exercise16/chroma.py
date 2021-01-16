@@ -1,20 +1,20 @@
 # ライブラリの読み込み
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import librosa
-import math
 
 # サンプリングレート
 SR = 16000
 
-# フレームサイズ
-size_frame = 512
+# フレームサイズ(2^11=2048)
+size_frame = 2 ** 11
 
 # フレームサイズに合わせてブラックマン窓を作成
 window = np.blackman(size_frame)
 
 # シフトサイズ
-size_shift = 16000 / 1000	# 0.001 秒 (10 msec)
+size_shift = SR / 1000	# 0.001 秒 (10 msec)
 
 # ノートナンバーから周波数へ
 def nn2hz(notenum):
@@ -22,7 +22,7 @@ def nn2hz(notenum):
 
 # 周波数からノートナンバーへ
 def hz2nn(frequency):
-	return int (round (12.0 * (math.log(frequency / 440.0) / math.log (2.0)))) + 69
+	return int (round (12.0 * (np.log(frequency / 440.0) / np.log (2.0)))) + 69
 
 #
 # スペクトルと対応する周波数ビンの情報を受け取り，クロマベクトルを算出
@@ -41,11 +41,41 @@ def chroma_vector(spectrum, frequencies):
 	cv = np.zeros(12)
 	
 	# スペクトルの周波数ビン毎にクロマベクトルの対応する要素に振幅スペクトルを足しこむ
-	for s, f in zip (spectrum , frequencies):
+	for s, f in zip (spectrum, frequencies):
 		nn = hz2nn(f)
-		cv[nn % 12] += math.abs(s)
+		cv[nn % 12] += np.abs(s)
 	
 	return cv
+
+# コードのテンプレートベクトル
+root_sound = 1.0
+third_sound = 0.5
+fifth_sound = 0.8
+chord_dic = []
+chord_dic.append([root_sound, 0,0,0, third_sound, 0,0, fifth_sound, 0,0,0,0])
+chord_dic.append([0, root_sound, 0,0,0, third_sound, 0,0, fifth_sound, 0,0,0])
+chord_dic.append([0,0, root_sound, 0,0,0, third_sound, 0,0, fifth_sound, 0,0])
+chord_dic.append([0,0,0, root_sound, 0,0,0, third_sound, 0,0, fifth_sound, 0])
+chord_dic.append([0,0,0,0, root_sound, 0,0,0, third_sound, 0,0, fifth_sound])
+chord_dic.append([fifth_sound, 0,0,0,0, root_sound, 0,0,0, third_sound, 0,0])
+chord_dic.append([0, fifth_sound, 0,0,0,0, root_sound, 0,0,0, third_sound, 0])
+chord_dic.append([0,0, fifth_sound, 0,0,0,0, root_sound, 0,0,0, third_sound])
+chord_dic.append([third_sound, 0,0, fifth_sound, 0,0,0,0, root_sound, 0,0,0])
+chord_dic.append([0, third_sound, 0,0, fifth_sound, 0,0,0,0, root_sound, 0,0])
+chord_dic.append([0,0, third_sound, 0,0, fifth_sound, 0,0,0,0, root_sound, 0])
+chord_dic.append([0,0,0, third_sound, 0,0, fifth_sound, 0,0,0,0, root_sound])
+chord_dic.append([root_sound, 0,0, third_sound, 0,0,0, fifth_sound, 0,0,0,0])
+chord_dic.append([0, root_sound, 0,0, third_sound, 0,0,0, fifth_sound, 0,0,0])
+chord_dic.append([0,0, root_sound, 0,0, third_sound, 0,0,0, fifth_sound, 0,0])
+chord_dic.append([0,0,0, root_sound, 0,0, third_sound, 0,0,0, fifth_sound, 0])
+chord_dic.append([0,0,0,0, root_sound, 0,0, third_sound, 0,0,0, fifth_sound])
+chord_dic.append([fifth_sound, 0,0,0,0, root_sound, 0,0, third_sound, 0,0,0])
+chord_dic.append([0, fifth_sound, 0,0,0,0, root_sound, 0,0, third_sound, 0,0])
+chord_dic.append([0,0, fifth_sound, 0,0,0,0, root_sound, 0,0, third_sound, 0])
+chord_dic.append([0,0,0, fifth_sound, 0,0,0,0, root_sound, 0,0, third_sound])
+chord_dic.append([third_sound, 0,0,0, fifth_sound, 0,0,0,0, root_sound, 0,0])
+chord_dic.append([0, third_sound, 0,0,0, fifth_sound, 0,0,0,0, root_sound, 0])
+chord_dic.append([0,0, third_sound, 0,0,0, fifth_sound, 0,0,0,0, root_sound])
 
 #####################################################################
 
@@ -57,8 +87,11 @@ if __name__ == "__main__":
 	# スペクトログラムを保存するlist
 	spectrogram = []
 
-	# ゼロ交差数の格納場所
-	zero_count = []
+	# クロマグラムを保存するlist
+	chromagram = []
+
+	# 和音を保存するlist
+	chord = []
 
 	# 音声ファイルの読み込み
 	x, _ = librosa.load("exercise/exercise16/thomas.wav", sr=SR)
@@ -78,11 +111,32 @@ if __name__ == "__main__":
 		# 窓掛けしたデータをFFT
 		fft_spec = np.fft.rfft(x_frame * window)
 
+		# 絶対値を取る
+		fft_abs_spec = np.abs(fft_spec)
+
 		# 複素スペクトログラムを対数振幅スペクトログラムに
-		fft_log_abs_spec = np.log(np.abs(fft_spec))
+		fft_log_abs_spec = np.log(fft_abs_spec)
 
 		# 計算した対数振幅スペクトログラムを配列に保存
 		spectrogram.append(fft_log_abs_spec)
+
+		# 周波数ビンを取得
+		frequencies = np.linspace(SR/len(fft_abs_spec), SR, len(fft_abs_spec))
+
+		# クロマベクトルを取得
+		chroma_frame = chroma_vector(fft_abs_spec, frequencies)
+
+		# 計算したクロマベクトルを配列に保存
+		chromagram.append(chroma_frame)
+
+		# クロマベクトルとテンプレートベクトルの内積を計算し、最大値を得る
+		chord_likelihood = 0
+		chord_frame = 0
+		for i in range(24) :
+			if np.dot(chord_dic[i], chroma_frame) > chord_likelihood :
+				chord_frame = i
+				chord_likelihood = np.dot(chord_dic[i], chroma_frame)
+		chord.append(chord_frame)
 
 
 	#
@@ -91,24 +145,38 @@ if __name__ == "__main__":
 
 	# 画像として保存するための設定
 	fig = plt.figure()
+	# 余白を合わせる
+	mpl.rcParams['axes.xmargin'] = 0
+	mpl.rcParams['axes.ymargin'] = 0
 
 	# まずはスペクトログラムを描画
-	ax1 = fig.add_subplot(111)
-	ax1.set_xlabel('frames')
+	ax1 = fig.add_subplot(311)	# 3行1列の1番目
 	ax1.set_ylabel('frequency [Hz]')
+	ax1.set_ylim([0, 4000])
 	ax1.imshow(
 		np.flipud(np.array(spectrogram).T),
-		extent=[0, len(predicted), 0, SR/2],
+		extent=[0, len(chord), 0, SR/2],
 		aspect='auto',
 		interpolation='nearest'
 	)
 
-	# 続いて右側のy軸を追加して，音量を重ねて描画
-	ax2 = ax1.twinx()
-	ax2.set_ylabel('predicted')
-	ax2.plot(predicted)
+	# 続いて下にクロマグラムを描画
+	ax2 = fig.add_subplot(312)	# 3行1列の2番目
+	ax2.set_ylabel('chromagram')
+	ax2.imshow(
+		np.flipud(np.array(chromagram).T),
+		extent=[0, len(chord), 0, 11],
+		aspect='auto',
+		interpolation='nearest'
+	)
+
+	# 続いて下に和音を描画
+	ax3 = fig.add_subplot(313)	# 3行1列の3番目
+	ax3.set_xlabel('frames')
+	ax3.set_ylabel('chord')
+	ax3.plot(chord)
 
 	plt.show()
 
 	# 保存
-	fig.savefig('exercise/exercise15/predicted.png')
+	fig.savefig('exercise/exercise16/chromagram.png')

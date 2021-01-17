@@ -19,14 +19,19 @@ size_shift = 16000 / 1000	# 0.001 秒 (10 msec)
 def calc_ceps(amplitude_spectrum):
 	# 窓を作成
 	window = np.blackman(len(amplitude_spectrum))
+
 	# 窓掛けしたデータをFFT
 	cepstrum = np.fft.rfft(amplitude_spectrum * window)
+
 	# 13次までのケプストラム係数を抽出
 	coefficients = cepstrum[:13]
+
 	# 0埋め
 	cepstrum = np.append(coefficients, [0] * (len(cepstrum) - len(coefficients)))
+
 	# 取り出した成分を逆フーリエ変換し、実数部分を取り出す
 	spectral_envelope = np.abs(np.fft.irfft(cepstrum))
+
 	return spectral_envelope
 
 #
@@ -40,6 +45,7 @@ def calc_likelihood(x, mu, sigma):
 	results = 0
 	for i in range(x.shape[0]):
 		results += -(np.log(np.sqrt(sigma[i]) + eps) + (x[i] - mu[i])**2/(2*sigma[i] + eps))
+
 	return results
 
 #####################################################################

@@ -26,7 +26,7 @@ zero_count = []
 
 # 音声波形データを受け取り，ゼロ交差数を計算する関数
 def zero_cross(waveform):
-	
+
 	zc = 0
 
 	for i in range(len(waveform) - 1):
@@ -55,7 +55,6 @@ x, _ = librosa.load('exercise/exercise14/voice.wav', sr=SR)
 # 
 
 for i in np.arange(0, len(x)-size_frame, size_shift):
-	
 	# 該当フレームのデータを取得
 	idx = int(i)	# arangeのインデクスはfloatなのでintに変換
 	x_frame = x[idx : idx+size_frame]
@@ -104,7 +103,7 @@ for i in np.arange(0, len(x)-size_frame, size_shift):
 	# 計算した対数振幅スペクトログラムを配列に保存
 	spectrogram.append(fft_log_abs_spec)
 
-# 閾値を設定。ゼロ交差数が0の場合基本周波数を0とする。左右1フレームも0にした。
+# 閾値を設定。ゼロ交差数が範囲外の場合基本周波数を0とする。左右1フレームも0にした。
 for i in range(len(zero_count)):
 	if zero_count[i] < 200 or zero_count[i] > 1000:
 		if i == 0:

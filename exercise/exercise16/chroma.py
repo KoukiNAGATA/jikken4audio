@@ -94,7 +94,7 @@ if __name__ == "__main__":
 	chord = []
 
 	# 音声ファイルの読み込み
-	x, _ = librosa.load("exercise/exercise16/thomas.wav", sr=SR)
+	x, _ = librosa.load("exercise/exercise16/easy_chords.wav", sr=SR)
 
     # 楽音成分とパーカッシブ成分に分ける。楽音成分のみ用いる。
 	x, _ = librosa.effects.hpss(x)
@@ -178,4 +178,4 @@ if __name__ == "__main__":
 	plt.show()
 
 	# 保存
-	fig.savefig('exercise/exercise16/chromagram.png')
+	fig.savefig('exercise/exercise16/easy_chords.png')

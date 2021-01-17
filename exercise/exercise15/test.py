@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # フレームサイズ
-size_frame = 512
+size_frame = 4096
 
 # フレームサイズに合わせてブラックマン窓を作成
 window = np.blackman(size_frame)
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 		interpolation='nearest'
 	)
 
-	# 続いて右側のy軸を追加して，音量を重ねて描画
+	# 続いて右側のy軸を追加して，母音を重ねて描画
 	ax2 = ax1.twinx()
 	ax2.set_ylabel('predicted')
 	ax2.plot(predicted)

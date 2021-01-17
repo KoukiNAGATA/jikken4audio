@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # フレームサイズ
-size_frame = 512
+size_frame = 4096
 
 # フレームサイズに合わせてブラックマン窓を作成
 window = np.blackman(size_frame)

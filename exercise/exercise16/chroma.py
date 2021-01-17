@@ -138,7 +138,6 @@ if __name__ == "__main__":
 				chord_likelihood = np.dot(chord_dic[i], chroma_frame)
 		chord.append(chord_frame)
 
-
 	#
 	# 画像に表示・保存
 	#

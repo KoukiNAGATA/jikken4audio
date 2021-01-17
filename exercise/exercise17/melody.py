@@ -29,9 +29,9 @@ def calc_melody_likelihood(spectrum, notenum, frequencies):
 	# スペクトルの周波数ビン毎にクロマベクトルの対応する要素に振幅スペクトルを足しこむ
 	melody_likelihood = 0
 	amplitude_ratio = 1.0	# 倍音に減衰をかける
-	fundamental_frequency = int(nn2hz(notenum))
+	fundamental_frequency = np.abs(nn2hz(notenum))
 	for s, f in zip (spectrum, frequencies) :
-		if f % fundamental_frequency == 0 :
+		if np.abs(f) % fundamental_frequency == 0 :
 			melody_likelihood += np.abs(s) * amplitude_ratio
 			amplitude_ratio *= 0.5
 	return melody_likelihood
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 	ax3 = ax2.twinx()
 	ax3.set_xlabel('time [s/16000]')
 	ax3.set_ylabel('melody')
-	ax3.plot(melody)
+	ax3.plot(melody, color = "r")
 
 	plt.show()
 

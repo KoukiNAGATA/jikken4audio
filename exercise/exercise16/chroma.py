@@ -7,8 +7,8 @@ import librosa
 # サンプリングレート
 SR = 16000
 
-# フレームサイズ(2^11=2048)
-size_frame = 2 ** 11
+# フレームサイズ(2^12=4096)
+size_frame = 2 ** 12
 
 # フレームサイズに合わせてブラックマン窓を作成
 window = np.blackman(size_frame)

@@ -9,7 +9,7 @@ SR = 16000
 # フレームサイズ
 size_frame = 4096
 
-# フレームサイズに合わせてブラックマン窓を作成
+# フレームサイズに合わせて窓を作成
 window = np.blackman(size_frame)
 
 # シフトサイズ
@@ -17,7 +17,7 @@ size_shift = 16000 / 1000	# 0.001 秒 (10 msec)
 
 # スペクトルを受け取り，ケプストラムの実数部分を返す関数
 def calc_ceps(amplitude_spectrum):
-	# ブラックマン窓を作成
+	# 窓を作成
 	window = np.blackman(len(amplitude_spectrum))
 	# 窓掛けしたデータをFFT
 	cepstrum = np.fft.rfft(amplitude_spectrum * window)

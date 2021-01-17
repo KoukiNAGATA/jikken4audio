@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/continuous/aiueo.wav', sr=SR)
+x, _ = librosa.load('exercise/exercise17/woman.wav', sr=SR)
 
 #
 # 短時間フーリエ変換
@@ -65,5 +65,5 @@ plt.ylim([0, 2000])    # 縦軸を拡大する。
 plt.show()
 
 # ブラックマン窓を保存
-fig.savefig('images/exercise7/plot-spectogram-blackman.png')
+fig.savefig('exercise/exercise17/plot-spectrogram-woman.png')
 

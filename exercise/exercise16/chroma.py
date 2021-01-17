@@ -10,8 +10,8 @@ SR = 16000
 # フレームサイズ(2^12=4096)
 size_frame = 2 ** 12
 
-# フレームサイズに合わせてブラックマン窓を作成
-window = np.blackman(size_frame)
+# フレームサイズに合わせて窓を作成
+window = np.hamming(size_frame)
 
 # シフトサイズ
 size_shift = SR / 1000	# 0.001 秒 (10 msec)

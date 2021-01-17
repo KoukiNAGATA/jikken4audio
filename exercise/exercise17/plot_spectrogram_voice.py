@@ -7,7 +7,7 @@ import librosa
 SR = 16000
 
 # 音声ファイルの読み込み
-x, _ = librosa.load('waves/continuous/aiueo.wav', sr=SR)
+x, _ = librosa.load('exercise/exercise17/voice.wav', sr=SR)
 
 #
 # 短時間フーリエ変換
@@ -53,7 +53,7 @@ for i in np.arange(0, len(x)-size_frame, size_shift):
 fig = plt.figure()
 
 # スペクトログラムを描画
-plt.xlabel('sample')					# x軸のラベルを設定
+plt.xlabel('time [s/16000]')					# x軸のラベルを設定
 plt.ylabel('frequency [Hz]')		# y軸のラベルを設定
 plt.imshow(
 	np.flipud(np.array(spectrogram).T),		# 画像とみなすために，データを転地して上下反転
@@ -65,5 +65,5 @@ plt.ylim([0, 2000])    # 縦軸を拡大する。
 plt.show()
 
 # ブラックマン窓を保存
-fig.savefig('images/exercise7/plot-spectogram-blackman.png')
+fig.savefig('exercise/exercise17/plot-spectrogram-voice.png')
 

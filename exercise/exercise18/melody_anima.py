@@ -29,15 +29,20 @@ def hz2nn(frequency):
 	return int (round (12.0 * (np.log(frequency / 440.0) / np.log (2.0)))) + 69
 
 # ノートナンバーから対応する全高調波成分の振幅の総和を計算
-def calc_melody_likelihood(spectrum, notenum, frequencies):
+def calc_melody_likelihood(spectrum, notenum):
+	fundamental_frequency = nn2hz(notenum)	#ノートナンバーに対応する周波数
 	melody_likelihood = 0
-	amplitude_ratio = 1.0	# 減衰比
-	fundamental_frequency = int(nn2hz(notenum))		#ノートナンバーに対応する周波数の整数部分
-	# スペクトルの周波数ビン毎にノートナンバーに対応していれば振幅スペクトルを傾斜をかけて足す
-	for s, f in zip (spectrum, frequencies) :
-		if int(f) % fundamental_frequency == 0 : 	# 整数部分が一致していれば対応しているとした
-			melody_likelihood += s * amplitude_ratio
-			amplitude_ratio *= 0.25		# 倍音に減衰をかける
+
+	# 基本周波数
+	s_idx = int(len(spectrum * 1) * (fundamental_frequency / (SR/2)))
+	melody_likelihood += spectrum[s_idx]
+	# 2倍音
+	s_idx = int(len(spectrum * 2) * (fundamental_frequency / (SR/2)))
+	melody_likelihood += spectrum[s_idx] * 0.75
+	# 3倍音
+	s_idx = int(len(spectrum * 3) * (fundamental_frequency / (SR/2)))
+	melody_likelihood += spectrum[s_idx] * 0.50
+
 	return melody_likelihood
 
 #####################################################################
@@ -84,7 +89,7 @@ if __name__ == "__main__":
 		frame_likelihood = 0
 		frame_index = 0
 		for i in range(low_pitch, high_pitch):
-			melody_likelihood = calc_melody_likelihood(fft_abs_spec, i, frequencies)
+			melody_likelihood = calc_melody_likelihood(fft_abs_spec, i)
 			if melody_likelihood > frame_likelihood :
 				frame_index = i
 				frame_likelihood = melody_likelihood

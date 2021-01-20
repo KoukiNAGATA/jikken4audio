@@ -34,13 +34,13 @@ def calc_melody_likelihood(spectrum, notenum):
 	melody_likelihood = 0
 
 	# 基本周波数
-	s_idx = int(len(spectrum * 1) * (fundamental_frequency / (SR/2)))
+	s_idx = int(len(spectrum) * (fundamental_frequency / (SR/2)))
 	melody_likelihood += spectrum[s_idx]
 	# 2倍音
-	s_idx = int(len(spectrum * 2) * (fundamental_frequency / (SR/2)))
+	s_idx = int(len(spectrum) * (fundamental_frequency * 2 / (SR/2)))
 	melody_likelihood += spectrum[s_idx] * 0.75
 	# 3倍音
-	s_idx = int(len(spectrum * 3) * (fundamental_frequency / (SR/2)))
+	s_idx = int(len(spectrum) * (fundamental_frequency * 3 / (SR/2)))
 	melody_likelihood += spectrum[s_idx] * 0.50
 
 	return melody_likelihood

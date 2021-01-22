@@ -25,13 +25,13 @@ SAMPLING_RATE = 16000
 FRAME_SIZE = 4096
 
 # サイズシフト
-SHIFT_SIZE = int(SAMPLING_RATE / 20)	# 今回は0.05秒
+SHIFT_SIZE = int(SAMPLING_RATE / 10)	# 今回は0.1秒
 
 # スペクトルをカラー表示する際に色の範囲を正規化するために
 # スペクトルの最小値と最大値を指定
 # スペクトルの値がこの範囲を超えると，同じ色になってしまう
 SPECTRUM_MIN = -5
-SPECTRUM_MAX = 1
+SPECTRUM_MAX = 10
 
 # log10を計算する際に，引数が0にならないようにするためにこの値を足す
 EPSILON = 1e-10
@@ -70,13 +70,14 @@ HIGH_FREQUENCY = 1500
 def animate(frame_index):
 
 	ax1_sub.set_array(spectrogram_data)
-	ax2_sub.set_data(time_x_data, melody_data)
+	ax2_sub.set_data(time_x_data, sing_data)	# マイク入力の音高
+	ax3_sub.set_data(time_x_data, melody_data)	# 楽曲の音高
 	
-	return ax1_sub, ax2_sub
+	return ax1_sub, ax2_sub, ax3_sub
 
 # GUIで表示するための処理（Tkinter）
 root = tkinter.Tk()
-root.wm_title("EXP4-AUDIO-SAMPLE")
+root.wm_title("粗雑採点DX")
 
 # スペクトログラムを描画
 fig, ax1 = plt.subplots(1, 1)
@@ -90,6 +91,7 @@ freq_y_data = np.linspace(8000/MAX_NUM_SPECTROGRAM, 8000, MAX_NUM_SPECTROGRAM)
 # とりあえず初期値（ゼロ）のスペクトログラムと音高のデータを作成
 # この numpy array にデータが更新されていく
 spectrogram_data = np.zeros((len(freq_y_data), len(time_x_data)))
+sing_data = np.zeros(len(time_x_data))
 melody_data = np.zeros(len(time_x_data))
 
 # スペクトログラムを描画する際に横軸と縦軸のデータを行列にしておく必要がある
@@ -115,10 +117,12 @@ ax1_sub = ax1.pcolormesh(
 
 # 音高を表示するために反転した軸を作成
 ax2 = ax1.twinx()
+ax3 = ax1.twinx()
 
 # 音高をプロットする
 # 戻り値はデータの更新 & 再描画のために必要
-ax2_sub, = ax2.plot(time_x_data, melody_data, c='y', linewidth = 5.0)
+ax2_sub, = ax2.plot(time_x_data, sing_data, c='y', linewidth = 5.0)
+ax3_sub, = ax3.plot(time_x_data, melody_data, c='#D3D3D3', linewidth = 5.0)
 
 # ラベルの設定
 ax1.set_xlabel('sec')				# x軸のラベルを設定
@@ -127,6 +131,7 @@ ax1.set_ylabel('frequency [Hz]')	# y軸のラベルを設定
 # y軸の範囲の設定
 ax1.set_ylim([LOW_FREQUENCY, HIGH_FREQUENCY])
 ax2.set_ylim([LOW_FREQUENCY, HIGH_FREQUENCY])
+ax3.set_ylim([LOW_FREQUENCY, HIGH_FREQUENCY])
 
 # maplotlib animationを設定
 ani = animation.FuncAnimation(
@@ -153,7 +158,7 @@ def _quit():
 	root.destroy()
 
 # 終了ボタンを作成
-button = tkinter.Button(master=root, text="終了", command=_quit, font=("", 30))
+button = tkinter.Button(master=root, text="採点", command=_quit, font=("", 30))
 button.pack()
 
 
@@ -188,13 +193,27 @@ def calc_melody_likelihood(spectrum, notenum):
 
 	return melody_likelihood
 
+# 音声波形データを受け取り，ゼロ交差数を計算する関数
+def zero_cross(waveform):
+
+	zc = 0
+
+	for i in range(len(waveform) - 1):
+		if(
+			(waveform[i] > 0.0 and waveform[i+1] < 0.0) or
+			(waveform[i] < 0.0 and waveform[i+1] > 0.0)
+		):
+			zc += 1
+
+	return zc * SAMPLING_RATE / FRAME_SIZE 	# 単位時間あたりに変換
+
 # フレーム毎に呼び出される関数
 def input_callback(in_data, frame_count, time_info, status_flags):
 	
 	# この関数は別スレッドで実行するため
 	# メインスレッドで定義した以下の２つの numpy array を利用できるように global 宣言する
 	# これらにはフレーム毎のスペクトルと音量のデータが格納される
-	global x_stacked_data, spectrogram_data, melody_data
+	global x_stacked_data, sing_data
 
 	# 現在のフレームの音声データをnumpy arrayに変換
 	x_current_frame = np.frombuffer(in_data, dtype=np.float32)
@@ -211,12 +230,6 @@ def input_callback(in_data, frame_count, time_info, status_flags):
 		# スペクトルを計算
 		fft_spec = np.fft.rfft(x_stacked_data * hamming_window)
 		fft_abs_spec = np.abs(fft_spec)
-		fft_log_abs_spec = np.log10(fft_abs_spec + EPSILON)[:-1]
-
-		# ２次元配列上で列方向（時間軸方向）に１つずらし（戻し）
-		# 最後の列（＝最後の時刻のスペクトルがあった位置）に最新のスペクトルデータを挿入
-		spectrogram_data = np.roll(spectrogram_data, -1, axis=1)
-		spectrogram_data[:, -1] = fft_log_abs_spec
 
 		# 対数振幅スペクトログラムから、ノートナンバーに対応する周波数の振幅の総和を取得
 		frame_likelihood = 0
@@ -227,8 +240,13 @@ def input_callback(in_data, frame_count, time_info, status_flags):
 				frame_index = i
 				frame_likelihood = melody_likelihood
 
-		melody_data = np.roll(melody_data, -1)
-		melody_data[-1] = nn2hz(frame_index)
+		sing_data = np.roll(sing_data, -1)
+		# 音量が閾値未満ならNanを配列に追加し、グラフ内に表示させない
+		vol = 20 * np.log10(np.mean(x_current_frame ** 2) + EPSILON)
+		if vol < -100 :
+			sing_data[-1] = np.nan
+		else :
+			sing_data[-1] = nn2hz(frame_index)
 	
 	# 戻り値は pyaudio の仕様に従うこと
 	return None, pyaudio.paContinue
@@ -250,6 +268,8 @@ stream = p.open(
 #
 # (3) mp3ファイル音楽を再生する処理
 #
+
+audio_stacked_data = np.array([])
 
 # mp3ファイル名
 # ここは各自の音源ファイルに合わせて変更すること
@@ -274,31 +294,74 @@ def play_music():
 
 	# この関数は別スレッドで実行するため
 	# メインスレッドで定義した以下の２つの変数を利用できるように global 宣言する
-	global is_gui_running, audio_data, now_playing_sec
+	global is_gui_running, audio_data, now_playing_secglobal, spectrogram_data, audio_stacked_data, melody_data
 
 	# pydubのmake_chunksを用いて音楽ファイルのデータを切り出しながら読み込む
 	# 第二引数には何ミリ秒毎に読み込むかを指定
-	# ここでは10ミリ秒ごとに読み込む
 
-	size_frame_music = 10	# 10ミリ秒毎に読み込む
+	size_frame_music = 100	# 100ミリ秒毎に読み込む
 
 	idx = 0
 
 	# make_chunks関数を使用して一定のフレーム毎に音楽ファイルを読み込む
-	#
-	# なぜ再生するだけのためにフレーム毎の処理をするのか？
-	# 音楽ファイルに対しても何らかの処理を行えるようにするため（このサンプルプログラムでは行っていない）
-	# おまけに，再生位置も計算することができる
+
+	# フレーム毎に計算し、楽曲のスペクトログラム配列に加える
+	# 再生位置も計算する
 	for chunk in make_chunks(audio_data, size_frame_music):
 		
 		# GUIが終了してれば，この関数の処理も終了する
 		if is_gui_running == False:
 			break
 
+		# 現在のフレームの楽曲データをnumpy arrayに変換
+		audio_current_frame = chunk.get_array_of_samples()
+
+		# 片側だけの音を抽出
+		audio_current_frame = audio_current_frame[::chunk.channels]
+
+		# 現在のフレームとこれまでに入力されたフレームを連結
+		audio_stacked_data = np.concatenate([audio_stacked_data, audio_current_frame])
+		
+		# フレームサイズ分のデータがあれば処理を行う
+		if len(audio_stacked_data) >= FRAME_SIZE:
+
+			# フレームサイズからはみ出した分は捨てる
+			audio_stacked_data = audio_stacked_data[len(audio_stacked_data)-FRAME_SIZE:]
+
+			# スペクトルを計算
+			fft_spec = np.fft.rfft(audio_stacked_data * hamming_window)
+			fft_abs_spec = np.abs(fft_spec)
+			fft_log_abs_spec = np.log10(fft_abs_spec + EPSILON)[:-1]
+
+			# ２次元配列上で列方向（時間軸方向）に１つずらし（戻し）
+			# 最後の列（＝最後の時刻のスペクトルがあった位置）に最新のスペクトルデータを挿入
+			spectrogram_data = np.roll(spectrogram_data, -1, axis=1)
+			spectrogram_data[:, -1] = fft_log_abs_spec
+
+			# 対数振幅スペクトログラムから、ノートナンバーに対応する周波数の振幅の総和を取得
+			frame_likelihood = 0
+			frame_index = 0
+			for i in range(LOW_PITCH, HIGH_PITCH):
+				melody_likelihood = calc_melody_likelihood(fft_abs_spec, i)
+				if melody_likelihood > frame_likelihood :
+					frame_index = i
+					frame_likelihood = melody_likelihood
+			melody_data = np.roll(melody_data, -1)
+			melody_data[-1] = nn2hz(frame_index)
+
+			melody_data = np.roll(melody_data, -1)
+			# ゼロ交差数をプロット
+			zero_count = zero_cross(audio_stacked_data)
+			# 閾値を設定。ゼロ交差数が範囲外の場合基本周波数を0とする。
+			if zero_count < 1000 or zero_count > 2500:
+				melody_data[-1] = np.nan
+			else :
+				melody_data[-1] = nn2hz(frame_index)
+
 		# pyaudioの再生ストリームに切り出した音楽データを流し込む
 		# 再生が完了するまで処理はここでブロックされる
 		stream_play.write(chunk._data)
-		
+
 		# 現在の再生位置を計算（単位は秒）
 		now_playing_sec = (idx * size_frame_music) / 1000.
 		

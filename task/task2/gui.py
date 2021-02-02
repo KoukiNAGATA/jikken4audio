@@ -211,7 +211,7 @@ def zero_cross(waveform):
 def input_callback(in_data, frame_count, time_info, status_flags):
 	
 	# この関数は別スレッドで実行するため
-	# メインスレッドで定義した以下の２つの numpy array を利用できるように global 宣言する
+	# メインスレッドで定義した以下の numpy array を利用できるように global 宣言する
 	# これらにはフレーム毎のスペクトルと音量のデータが格納される
 	global x_stacked_data, sing_data
 
@@ -293,8 +293,9 @@ stream_play = p_play.open(
 def play_music():
 
 	# この関数は別スレッドで実行するため
-	# メインスレッドで定義した以下の２つの変数を利用できるように global 宣言する
-	global is_gui_running, audio_data, now_playing_secglobal, spectrogram_data, audio_stacked_data, melody_data
+	# メインスレッドで定義した以下の変数を利用できるように global 宣言する
+	global is_gui_running, audio_data, now_playing_sec
+	global spectrogram_data, audio_stacked_data, melody_data
 
 	# pydubのmake_chunksを用いて音楽ファイルのデータを切り出しながら読み込む
 	# 第二引数には何ミリ秒毎に読み込むかを指定
